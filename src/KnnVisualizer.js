@@ -111,10 +111,19 @@ export default function KnnVisualizer() {
   const width = 400;
   const height = 400;
 
+  function getSvgCoords(evt) {
+    const svg = evt.currentTarget;
+    const pt = svg.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+
+    const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x: svgP.x, y: svgP.y }; // in viewBox coordinates (0–100)
+  }
+
   function handleClick(e) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const { x, y } = getSvgCoords(e);
+
     const yMath = 100 - y;
 
     if (e.altKey) {
@@ -126,11 +135,8 @@ export default function KnnVisualizer() {
 
   function handleContextMenu(e) {
     e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const { x, y } = getSvgCoords(e);
     const yMath = 100 - y;
-
     addTrainingPoint({ x, y: yMath });
   }
 
