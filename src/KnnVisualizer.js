@@ -203,7 +203,7 @@ export default function KnnVisualizer() {
           <div>
             <div className="knn-title">k-NN Decision Boundary Visualizer</div>
             <div className="knn-subtitle">
-              Graph on top · controls and info neatly arranged underneath.
+              You can try out as much as you want!
             </div>
           </div>
           <div className="knn-tag">Byambajav.M</div>
