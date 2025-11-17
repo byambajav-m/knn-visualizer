@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/knn-visualizer/static/css/main.15ff473c.css",
-    "main.js": "/knn-visualizer/static/js/main.5ef0911d.js",
+    "main.js": "/knn-visualizer/static/js/main.4e7979b2.js",
     "index.html": "/knn-visualizer/index.html",
     "main.15ff473c.css.map": "/knn-visualizer/static/css/main.15ff473c.css.map",
-    "main.5ef0911d.js.map": "/knn-visualizer/static/js/main.5ef0911d.js.map"
+    "main.4e7979b2.js.map": "/knn-visualizer/static/js/main.4e7979b2.js.map"
   },
   "entrypoints": [
     "static/css/main.15ff473c.css",
-    "static/js/main.5ef0911d.js"
+    "static/js/main.4e7979b2.js"
   ]
 }
