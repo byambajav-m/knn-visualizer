@@ -111,6 +111,33 @@ export default function KnnVisualizer() {
   const width = 400;
   const height = 400;
 
+  // NEW: single example pair (query point vs closest neighbor)
+  const examplePair = useMemo(() => {
+    if (!queryPoint || neighbors.length === 0) return null;
+    const n = neighbors[0];
+    const dx = Math.abs(queryPoint.x - n.x);
+    const dy = Math.abs(queryPoint.y - n.y);
+    return {
+      neighbor: n,
+      dx,
+      dy,
+    };
+  }, [neighbors, queryPoint]);
+
+  // NEW: compute all three metrics for the same (dx, dy)
+  const metricComparison = useMemo(() => {
+    if (!examplePair) return null;
+    const { dx, dy } = examplePair;
+    const origin = { x: 0, y: 0 };
+    const deltas = { x: dx, y: dy };
+
+    return {
+      euclidean: distance(origin, deltas, "euclidean"),
+      manhattan: distance(origin, deltas, "manhattan"),
+      minkowski: distance(origin, deltas, "minkowski", minkowskiP),
+    };
+  }, [examplePair, minkowskiP]);
+
   function getSvgCoords(evt) {
     const svg = evt.currentTarget;
     const pt = svg.createSVGPoint();
@@ -537,6 +564,184 @@ export default function KnnVisualizer() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* NEW: Distance metric intuition */}
+            <div className="knn-card">
+              <div className="knn-card-title">Distance metric intuition</div>
+
+              {!queryPoint && (
+                <p style={{ fontSize: 12, color: "#6b7280" }}>
+                  Add a query point to see the distance formula in action.
+                </p>
+              )}
+
+              {queryPoint && examplePair && metricComparison && (
+                <>
+                  <p style={{ fontSize: 12, marginBottom: 6 }}>
+                    We look at the <strong>closest neighbor</strong>{" "}
+                    <code>
+                      ({examplePair.neighbor.x.toFixed(2)},{" "}
+                      {examplePair.neighbor.y.toFixed(2)})
+                    </code>{" "}
+                    and compare it to the query point{" "}
+                    <code>
+                      ({queryPoint.x.toFixed(2)}, {queryPoint.y.toFixed(2)})
+                    </code>
+                    .
+                  </p>
+
+                  <p
+                    style={{
+                      fontSize: 12,
+                      marginBottom: 4,
+                    }}
+                  >
+                    Differences:
+                    <br />
+                    <code>
+                      Δx = |x<sub>query</sub> - x<sub>neighbor</sub>| ={" "}
+                      {examplePair.dx.toFixed(3)}
+                    </code>
+                    <br />
+                    <code>
+                      Δy = |y<sub>query</sub> - y<sub>neighbor</sub>| ={" "}
+                      {examplePair.dy.toFixed(3)}
+                    </code>
+                  </p>
+
+                  {/* Formula that changes with selected metric */}
+                  <div className="knn-formula-block">
+                    <div
+                      style={{
+                        fontSize: 12,
+                        marginBottom: 4,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {metricPrettyNames[distanceMetric]} formula
+                    </div>
+
+                    {distanceMetric === "euclidean" && (
+                      <div className="knn-formula">
+                        d =
+                        <span className="knn-formula-dynamic">
+                          √(Δx² + Δy²)
+                        </span>
+                        =
+                        <span className="knn-formula-example">
+                          √(
+                          {examplePair.dx.toFixed(3)}² +{" "}
+                          {examplePair.dy.toFixed(3)}²) ≈{" "}
+                          {formatDistance(metricComparison.euclidean)}
+                        </span>
+                      </div>
+                    )}
+
+                    {distanceMetric === "manhattan" && (
+                      <div className="knn-formula">
+                        d =
+                        <span className="knn-formula-dynamic">|Δx| + |Δy|</span>
+                        =
+                        <span className="knn-formula-example">
+                          {" "}
+                          {examplePair.dx.toFixed(3)} +{" "}
+                          {examplePair.dy.toFixed(3)} ≈{" "}
+                          {formatDistance(metricComparison.manhattan)}
+                        </span>
+                      </div>
+                    )}
+
+                    {distanceMetric === "minkowski" && (
+                      <div className="knn-formula">
+                        d =
+                        <span className="knn-formula-dynamic">
+                          (|Δx|<sup>p</sup> + |Δy|<sup>p</sup>)<sup>1/p</sup>
+                        </span>
+                        =
+                        <span className="knn-formula-example">
+                          (|
+                          {examplePair.dx.toFixed(3)}|<sup>{minkowskiP}</sup> +
+                          |{examplePair.dy.toFixed(3)}|<sup>{minkowskiP}</sup>)
+                          <sup>1/{minkowskiP}</sup> ≈{" "}
+                          {formatDistance(metricComparison.minkowski)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Compare all metrics on the same pair */}
+                  <div style={{ marginTop: 10 }}>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Same pair, different metrics
+                    </div>
+                    <table className="knn-table">
+                      <thead>
+                        <tr>
+                          <th>Metric</th>
+                          <th>Symbol</th>
+                          <th>Distance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          className={
+                            distanceMetric === "euclidean"
+                              ? "knn-row-active-metric"
+                              : ""
+                          }
+                        >
+                          <td>Euclidean (L2)</td>
+                          <td>√(Δx² + Δy²)</td>
+                          <td>{formatDistance(metricComparison.euclidean)}</td>
+                        </tr>
+                        <tr
+                          className={
+                            distanceMetric === "manhattan"
+                              ? "knn-row-active-metric"
+                              : ""
+                          }
+                        >
+                          <td>Manhattan (L1)</td>
+                          <td>|Δx| + |Δy|</td>
+                          <td>{formatDistance(metricComparison.manhattan)}</td>
+                        </tr>
+                        <tr
+                          className={
+                            distanceMetric === "minkowski"
+                              ? "knn-row-active-metric"
+                              : ""
+                          }
+                        >
+                          <td>
+                            Minkowski (Lp)
+                            <br />
+                            <span style={{ fontSize: 11 }}>
+                              (current p = {minkowskiP})
+                            </span>
+                          </td>
+                          <td>
+                            (|Δx|<sup>p</sup> + |Δy|<sup>p</sup>)<sup>1/p</sup>
+                          </td>
+                          <td>{formatDistance(metricComparison.minkowski)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p style={{ fontSize: 11, marginTop: 4, color: "#6b7280" }}>
+                      Notice how the <strong>same pair of points</strong> gets
+                      different distances depending on the metric. k-NN&apos;s
+                      behavior changes because &quot;closest&quot; is defined by
+                      this choice.
+                    </p>
                   </div>
                 </>
               )}
